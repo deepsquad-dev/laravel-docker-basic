@@ -1,0 +1,52 @@
+version: "3.9"  # optional since v1.27.0
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: harddocker/app:latest
+    networks:
+      - mainnet
+    volumes:
+      - ./application:/var/www/html
+    ports:
+      - 80:80
+    working_dir: /var/www/html
+  cache:
+    image: redis:alpine
+    networks:
+      - mainnet
+    volumes:
+      - cachedata:/data
+  db:
+    image: mariadb:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=testdb
+      - MYSQL_USER=maria
+      - MYSQL_PASSWORD=secret
+    ports:
+      - ${DB_PORT}:3306
+    networks:
+      - mainnet
+    volumes:
+      - dbdata:/var/lib/mysql
+  node:
+    build:
+      context: ./node
+      dockerfile: Dockerfile
+    image: harddocker/node:latest
+    networks:
+      - mainnet
+    volumes:
+      - .:/opt
+    working_dir: /opt
+    command: echo hello world
+networks:
+  mainnet:
+    driver: bridge
+volumes:
+  dbdata:
+    driver: local
+  cachedata:
+    driver: local
